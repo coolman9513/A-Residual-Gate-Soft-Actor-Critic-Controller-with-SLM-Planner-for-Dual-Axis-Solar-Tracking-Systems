@@ -1,0 +1,35 @@
+# data is NREL NSRDB and is not redistributed - see README
+data/*.csv
+data/*.npz
+*.csv
+*.npz
+
+# trained checkpoints and adapters
+models/
+finetune/output*/
+finetune/data*/
+
+# run artefacts
+*.log
+*.out
+*.err
+*.pid
+*_DONE.txt
+
+# generated figures
+plots/paper/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

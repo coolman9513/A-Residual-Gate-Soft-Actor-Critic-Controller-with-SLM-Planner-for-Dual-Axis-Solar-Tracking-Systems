@@ -1,0 +1,269 @@
+{
+  "root_directory": null,
+  "central_agent": false,
+  "simulation_start_time_step": 0,
+  "simulation_end_time_step": 52559,
+  "episode_time_steps": null,
+  "rolling_episode_split": false,
+  "random_episode_split": false,
+  "seconds_per_time_step": 600,
+  "data": {
+    "filename": "2020.csv",
+    "datetime_column": "Datetime"
+  },
+  "observations": {
+    "month": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "day": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "hour": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "minute": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "sin_time_of_day": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "cos_time_of_day": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "sin_day_of_year": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "cos_day_of_year": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "solar_azimuth_angle": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "solar_zenith_angle": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "next_10min_solar_azimuth": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "next_10min_solar_zenith": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "temperature": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "dhi": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "dni": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "next_10min_DNI": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "next_10min_DHI": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "next_30min_average_DNI": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "dni_clear_sky_ratio": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "dhi_clear_sky_ratio": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "ghi": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "wind_speed": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "cloud_type": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "clearsky_dhi": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "clearsky_dni": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "clearsky_ghi": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "relative_humidity": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "surface_albedo": {
+      "active": false,
+      "shared_in_central_agent": true
+    },
+    "current_panel_tilt_angle": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "current_panel_azimuth_angle": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "previous_action_tilt_angle": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "previous_action_azimuth_angle": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "panel_tilt_delta_deg": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "panel_azimuth_delta_deg": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "tracking_error_deg": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "cos_incidence": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "previous_generated_energy_kwh": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "current_generated_energy_kwh": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "poa_w_per_m2": {
+      "active": false,
+      "shared_in_central_agent": false
+    },
+    "generated_energy_kwh": {
+      "active": false,
+      "shared_in_central_agent": false
+    }
+  },
+  "actions": {
+    "panel_azimuth_delta": {
+      "active": true,
+      "low": -8.0,
+      "high": 8.0
+    },
+    "panel_tilt_delta": {
+      "active": true,
+      "low": -5.0,
+      "high": 5.0
+    }
+  },
+  "initial_orientation": {
+    "azimuth_deg": 100.0,
+    "tilt_deg": 85.0
+  },
+  "generation": {
+    "dni_min_threshold": 0.0
+  },
+  "panel": {
+    "attributes": {
+      "area_m2": 0.5159,
+      "efficiency": 0.19383601473153714,
+      "performance_ratio": 1.0,
+      "temperature_coefficient": 0.004,
+      "reference_temperature_c": 25.0,
+      "max_power_kw": 0.1,
+      "power_tolerance_factor": 1.0
+    }
+  },
+  "reward_function": {
+    "type": "st.reward.SolarTrackerReward",
+    "attributes": {
+      "tracking_efficiency_weight": 1.0,
+      "energy_weight": 1.0,
+      "azimuth_movement_penalty": 1e-03,
+      "tilt_movement_penalty": 1.5e-03,
+      "azimuth_squared_movement_penalty": 5e-04,
+      "tilt_squared_movement_penalty": 5e-05,
+      "smoothness_penalty": 5e-05,
+      "ideal_energy_epsilon": 1e-06,
+      "energy_reward_mode": "raw",
+      "peak_tracking_exponent": 1.5
+    }
+  },
+  "baselines": {
+    "fixed": {
+      "azimuth_deg": 180.0,
+      "tilt_deg": 33.0,
+      "agent": {
+        "type": "st.agents.FixedSolarAgent",
+        "attributes": {}
+      }
+    },
+    "rule_based": {
+      "agent": {
+        "type": "st.agents.RuleBasedSolarTrackerAgent",
+        "attributes": {
+          "night_tilt_deg": 10.0,
+          "max_delta_deg_per_step": 15.0,
+          "daylight_tilt_offset_deg": 0.0
+        }
+      }
+    },
+    "rbc_schedule": {
+      "agent": {
+        "type": "st.rbc.SolarTrackerRBC",
+        "attributes": {
+          "outside_tracking_policy": "hold_last"
+        }
+      }
+    }
+  },
+  "action_mode": "delta",
+  "panel_angle_bounds": {
+    "azimuth": {
+      "low": 70.0,
+      "high": 290.0
+    },
+    "tilt": {
+      "low": 10.0,
+      "high": 85.0
+    }
+  },
+  "tracking_window": {
+    "start_hour": 7.0,
+    "end_hour": 18.0
+  },
+  "auto_reset_to_initial_orientation": true,
+  "action_deadband": {
+    "azimuth_delta_deg": 0.3,
+    "tilt_delta_deg": 0.2
+  }
+}
