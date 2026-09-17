@@ -1,0 +1,31 @@
+# Language-model environment (Python 3.10)
+#
+# The planner runs in a SEPARATE environment from the RL stack. requirements.txt
+# pins the RL side (Python 3.7, torch 1.13 + CUDA 11.7, old gym); those pins are
+# mutually incompatible with the versions below, which is why llm/local_client.py
+# serves the model through a subprocess (finetune/serve_inference.py) instead of
+# importing it in-process.
+#
+# Tested with Python 3.10.20.
+#
+# ── PyTorch (CUDA 12.1) ───────────────────────────────────────────────────────
+# Install separately FIRST, so pip resolves the CUDA build rather than the CPU one:
+#   pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+torch==2.5.1
+
+# ── Transformers / LoRA ───────────────────────────────────────────────────────
+transformers==5.9.0
+peft==0.19.1
+accelerate==1.13.0          # required by device_map="auto" in serve_inference.py
+
+# ── Pinned transitive dependencies ────────────────────────────────────────────
+# Pinned because tokenizer and adapter loading are sensitive to these versions.
+tokenizers==0.22.2
+safetensors==0.7.0
+huggingface-hub==1.16.1
+numpy==1.26.4
+
+# ── Deliberately NOT required ─────────────────────────────────────────────────
+# finetune/train.py implements its own Dataset and training loop precisely to
+# avoid `datasets` and `trl`, whose pyarrow dependency breaks on Windows. Do not
+# add them: they are not imported anywhere in this environment.

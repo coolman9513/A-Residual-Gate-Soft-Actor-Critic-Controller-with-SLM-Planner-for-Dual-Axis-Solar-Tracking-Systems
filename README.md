@@ -17,19 +17,31 @@ An hourly planner classifies the weather regime and sets hard constraints
 
 ## Environments
 
-Two conda environments are needed. The RL stack and the language model have
-incompatible dependencies, so the model is served in a subprocess.
+Two conda environments are needed. The RL stack (Python 3.7, torch 1.13 + CUDA
+11.7, old `gym`) and the language model (Python 3.10, torch 2.5 + CUDA 12.1,
+transformers 5.x) have mutually incompatible pins, so the model is served in a
+subprocess rather than imported in-process.
 
-```
-# RL / simulation  (Python 3.7)
-torch 1.13 (CUDA), gym 0.26, numpy, pandas, scikit-learn, matplotlib, pyyaml
+```bash
+# RL / simulation                      -> requirements.txt
+conda create -n solar-rl python=3.7 -y
+conda activate solar-rl
+pip install torch==1.13.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+pip install -r requirements.txt
 
-# language model   (Python 3.10)
-torch 2.5, transformers, peft, accelerate
+# language model / planner             -> requirements-llm.txt
+conda create -n solar-llm python=3.10 -y
+conda activate solar-llm
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements-llm.txt
 ```
+
+In both cases install `torch` first so pip resolves the CUDA build rather than
+the CPU one.
 
 `llm/local_client.py` starts `finetune/serve_inference.py` in the second
 environment; edit the interpreter path at the top of that file for your machine.
+Set `SOLAR_SLM_ADAPTER` to choose which fine-tuned adapter is served.
 
 ## Data
 
