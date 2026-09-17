@@ -16,7 +16,9 @@ authors:
     orcid: "https://orcid.org/0009-0000-7300-166X"
     affiliation: "Chonnam National University, Department of Computer Engineering"
 version: v1.0-peerj
+doi: 10.5281/zenodo.22809319
 license: MIT
+repository-code: "https://github.com/coolman9513/A-Residual-Gate-Soft-Actor-Critic-Controller-with-SLM-Planner-for-Dual-Axis-Solar-Tracking-Systems"
 keywords:
   - solar tracking
   - dual-axis tracker

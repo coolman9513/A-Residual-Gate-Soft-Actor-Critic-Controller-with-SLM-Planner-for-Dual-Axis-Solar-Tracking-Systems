@@ -1,5 +1,7 @@
 # RG-SAC: Residual-Gate Soft Actor-Critic with a Small-Language-Model Planner
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22809319.svg)](https://doi.org/10.5281/zenodo.22809319)
+
 Code for *A Residual-Gate Soft Actor-Critic Controller with a Small-Language-Model
 Planner for Dual-Axis Solar Tracking*.
 
