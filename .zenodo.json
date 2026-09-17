@@ -1,0 +1,26 @@
+{
+  "title": "A Residual-Gate Soft Actor-Critic Controller with Small Language Model Planner for Dual-Axis Solar Tracking Systems",
+  "description": "<p>Source code for the RG-SAC dual-axis solar tracking controller. A dual-axis solar tracker is controlled in three layers: an astronomical rule-based schedule provides a smooth base orientation, a sun-position model computes the correction toward the ideal orientation, and a Soft Actor-Critic agent with automatic entropy tuning learns a per-axis gate g in [0,1] deciding how much of that correction to apply. Because g = 0 reproduces the schedule exactly, the classical controller is retained as a structural lower bound, so the learned policy can only add energy and never fall below the baseline.</p><p>An hourly planner classifies the weather regime and sets hard constraints (per-hour authority limits, a movement deadband, and the base-pose mode). The planner is a Qwen2.5-0.5B-Instruct small language model fine-tuned with LoRA on hindsight-optimal targets obtained by scoring every candidate hourly regime in the simulator against a per-activation motor-wear cost.</p><p>Evaluation uses a data-driven simulation environment built from NREL/NSRDB irradiance data for Gwangju, South Korea. The NSRDB data itself is not redistributed here; see the README for retrieval instructions.</p>",
+  "upload_type": "software",
+  "license": "MIT",
+  "version": "v1.0-peerj",
+  "language": "eng",
+  "creators": [
+    {
+      "name": "Esanov, Alibek Rustamovich",
+      "orcid": "0009-0000-7300-166X",
+      "affiliation": "Chonnam National University, Department of Computer Engineering"
+    }
+  ],
+  "keywords": [
+    "solar tracking",
+    "dual-axis tracker",
+    "deep reinforcement learning",
+    "soft actor-critic",
+    "residual control",
+    "small language model",
+    "photovoltaic systems",
+    "actuator wear"
+  ],
+  "access_right": "open"
+}
