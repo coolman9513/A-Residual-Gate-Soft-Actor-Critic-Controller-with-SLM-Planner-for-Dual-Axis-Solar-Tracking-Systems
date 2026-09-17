@@ -36,10 +36,10 @@ except Exception:  # pragma: no cover
         spaces = _Spaces()
 
 from citylearn.base import Environment, EpisodeTracker
-from st.metrics import metrics_to_dataframe, summarize_tracker_metrics
-from st.reward import SolarTrackerReward
-from st.schema import load_schema
-from st.tracker import (
+from metrics import metrics_to_dataframe, summarize_tracker_metrics
+from reward import SolarTrackerReward
+from schema import load_schema
+from tracker import (
     PanelModel,
     compute_plane_of_array_irradiance,
     compute_power_and_energy,

@@ -351,7 +351,7 @@ class SolarTrackerMetaSACWrapper:
         _ensure_training_imports()
         np = sys.modules["numpy"]
         from gym import spaces
-        from st.environment import SolarTrackerEnv
+        from environment import SolarTrackerEnv
 
         self.schema_template = copy.deepcopy(schema_template)
         self.reward_scale = float(reward_scale)

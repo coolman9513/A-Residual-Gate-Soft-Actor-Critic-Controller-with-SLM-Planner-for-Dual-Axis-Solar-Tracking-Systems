@@ -39,7 +39,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-for _p in [str(ROOT.parent), str(ROOT), str(ROOT / "meta_sac"), str(ROOT / "finetune")]:
+for _p in [str(ROOT), str(ROOT / "meta_sac"), str(ROOT / "finetune")]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 from typing import List, Union
 
-from st.utilities import read_json
+from utilities import read_json
 
 
 class DataSet:

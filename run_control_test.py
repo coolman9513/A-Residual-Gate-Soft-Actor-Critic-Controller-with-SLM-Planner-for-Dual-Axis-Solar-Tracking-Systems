@@ -35,7 +35,7 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-for _p in [str(ROOT.parent), str(ROOT), str(ROOT / "meta_sac")]:
+for _p in [str(ROOT), str(ROOT / "meta_sac")]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 

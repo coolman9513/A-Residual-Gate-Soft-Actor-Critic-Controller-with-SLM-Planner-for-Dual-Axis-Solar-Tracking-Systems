@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np, pandas as pd, torch
 
 ROOT = Path(__file__).resolve().parent
-for p in [str(ROOT), str(ROOT / "meta_sac"), str(ROOT.parent)]:
+for p in [str(ROOT), str(ROOT / "meta_sac")]:
     if p not in sys.path:
         sys.path.insert(0, p)
 

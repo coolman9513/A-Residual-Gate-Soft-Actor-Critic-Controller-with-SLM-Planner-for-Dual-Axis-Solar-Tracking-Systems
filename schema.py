@@ -4,8 +4,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Mapping, Union
 
-from st.data import DataSet
-from st.utilities import read_json
+from data import DataSet
+from utilities import read_json
 
 
 class UnknownSchemaError(Exception):

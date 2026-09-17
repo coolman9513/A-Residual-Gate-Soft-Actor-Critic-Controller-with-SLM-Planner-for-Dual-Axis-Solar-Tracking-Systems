@@ -16,7 +16,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Uni
 import numpy as np
 import pandas as pd
 
-from st.agents import SolarAgent
+from agents import SolarAgent
 
 try:  # pragma: no cover
     import ipywidgets as widgets

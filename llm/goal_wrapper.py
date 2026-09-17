@@ -7,7 +7,7 @@ from typing import Mapping, Optional
 
 import numpy as np
 
-from st.utilities import SolarTrackerMetaSACWrapper
+from utilities import SolarTrackerMetaSACWrapper
 from .goal_guidance import GoalOutput, LLMGoalGuidance
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
