@@ -15,6 +15,76 @@ bound: the learned policy can add energy but never fall below the baseline.
 An hourly planner classifies the weather regime and sets hard constraints
 (per-hour authority limits, a deadband, and the base-pose mode). The planner is a small language model fine-tuned with LoRA.
 
+## Citation
+
+### This software
+
+Archived on Zenodo with a DOI that resolves to the latest version:
+
+```bibtex
+@software{esanov_rgsac_code,
+  author    = {Esanov, Alibek Rustamovich and Lim, Chang Gyoon},
+  title     = {A Residual-Gate Soft Actor-Critic Controller with Small Language
+               Model Planner for Dual-Axis Solar Tracking Systems},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.22809319},
+  url       = {https://doi.org/10.5281/zenodo.22809319}
+}
+```
+
+`CITATION.cff` carries the same metadata, so GitHub's *Cite this repository*
+button produces this automatically.
+
+### The paper
+
+```bibtex
+@article{esanov_rgsac_paper,
+  author  = {Esanov, Alibek Rustamovich and Lim, Chang Gyoon},
+  title   = {A Residual-Gate Soft Actor-Critic Controller with a
+             Small-Language-Model Planner for Dual-Axis Solar Tracking},
+  journal = {PeerJ Computer Science},
+  note    = {Under review}
+}
+```
+
+Update the volume, pages and DOI here and in `CITATION.cff` once it is published.
+
+### Data
+
+The irradiance and meteorological data are NREL/NSRDB and are not redistributed
+with this code. Credit DOE/NREL/ALLIANCE and cite:
+
+```bibtex
+@article{sengupta2018nsrdb,
+  author  = {Sengupta, Manajit and Xie, Yu and Lopez, Anthony and Habte, Aron
+             and Maclaurin, Galen and Shelby, James},
+  title   = {The National Solar Radiation Data Base ({NSRDB})},
+  journal = {Renewable and Sustainable Energy Reviews},
+  volume  = {89},
+  pages   = {51--60},
+  year    = {2018},
+  doi     = {10.1016/j.rser.2018.03.003}
+}
+```
+
+### Base model
+
+The planner fine-tunes `Qwen/Qwen2.5-0.5B-Instruct`, licensed Apache-2.0. The
+LoRA adapters are derivative works of it.
+
+```bibtex
+@article{qwen2025qwen25,
+  author  = {{Qwen Team}},
+  title   = {Qwen2.5 Technical Report},
+  journal = {arXiv preprint arXiv:2412.15115},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2412.15115}
+}
+```
+
+The simulation environment builds on CityLearn, which supplies the `Environment`
+and `EpisodeTracker` base classes; see its own repository for its citation.
+
 ## Requirements
 
 ### Hardware
@@ -124,11 +194,7 @@ The raw download is named `5771095_35.20_126.85_2020.csv` and carries the two
 NSRDB metadata header rows above the column header.
 
 NSRDB is published under a Creative Commons Attribution licence; credit
-DOE/NREL/ALLIANCE when reusing it. Cite the database as:
-
-> Sengupta, M., Xie, Y., Lopez, A., Habte, A., Maclaurin, G., Shelby, J. (2018).
-> The National Solar Radiation Data Base (NSRDB). *Renewable and Sustainable
-> Energy Reviews*, 89, 51–60. https://doi.org/10.1016/j.rser.2018.03.003
+DOE/NREL/ALLIANCE when reusing it. The citation is in [Citation](#citation).
 
 ### Columns
 
