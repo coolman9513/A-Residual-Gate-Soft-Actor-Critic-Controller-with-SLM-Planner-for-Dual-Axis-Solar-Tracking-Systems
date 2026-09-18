@@ -52,7 +52,15 @@ NOSLLM_KW = dict(action_mode="gate", authority_mode="fixed",
                  cloud_anticipate_lookahead=0, move_deadband_deg=0.0, disable_guidance=True)
 
 # seed 2021 was the paper run — reuse those checkpoints instead of retraining
+# Seed 2021 was the original run; reuse those checkpoints when they are present
+# (for example restored from the Zenodo archive) instead of retraining. A fresh
+# clone has no models/ directory, so _have() falls through to training.
 EXISTING = {2021: {"nosllm": "sac_auto_gate_nosllm", "final": "sac_auto_gate_final"}}
+
+
+def _have(folder) -> bool:
+    """True when a usable checkpoint for that folder is already on disk."""
+    return (checkpointing.MODELS_ROOT / str(folder) / "checkpoint.pt").exists()
 
 RUN_QWEN = True                      # set False to skip the (slow) real-Qwen eval
 LOG, DONE = ROOT / "revision_seeds.log", ROOT / "revision_seeds_DONE.txt"
@@ -145,12 +153,12 @@ def main():
         log(f"===== SEED {seed} =====")
         set_seed(seed)
         # no-SLM policy
-        if seed in EXISTING:
+        if seed in EXISTING and _have(EXISTING[seed]["nosllm"]):
             rl = load_saved(EXISTING[seed]["nosllm"], NOSLLM_KW, seed)
         else:
             rl = train("no-SLM", f"rev_nosllm_{seed}", NOSLLM_KW, seed)
         # FINAL residual-gate policy (trained with rule-router)
-        if seed in EXISTING:
+        if seed in EXISTING and _have(EXISTING[seed]["final"]):
             fin = load_saved(EXISTING[seed]["final"], FINAL_KW, seed)
         else:
             fin = train("RG-SAC", f"rev_final_{seed}", FINAL_KW, seed)

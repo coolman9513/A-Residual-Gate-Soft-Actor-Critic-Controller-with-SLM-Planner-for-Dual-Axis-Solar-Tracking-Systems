@@ -116,23 +116,17 @@ them.
 
 ### Preparation
 
-Three steps, in order:
+Three scripts turn the download into what the code reads. The commands, in order,
+are in [Usage](#usage).
 
-```bash
-# 1. raw NSRDB download -> data/2020.csv and the 56-day evaluation subset
-python finetune/prepare_nsrdb.py 5771095_35.20_126.85_2020.csv --subset
+| script | produces | needed for |
+|---|---|---|
+| `finetune/prepare_nsrdb.py` | `data/2020.csv` and the 56-day subset | everything |
+| `finetune/preprocess_csv.py` | `data/2020_enriched.csv`, noisy 20-60 min horizons | regenerating the planner training set only |
+| `finetune/precompute_env_cache.py` | `*_precomputed.npz` step cache | optional; roughly halves environment runtime |
 
-# 2. optional, planner fine-tuning only: adds noisy 20-60 min horizons
-#    -> data/2020_enriched.csv
-python finetune/preprocess_csv.py
-
-# 3. optional: precompute per-step constants, roughly halves env runtime
-python finetune/precompute_env_cache.py data/2020.csv --schema data/schema.json
-```
-
-Step 1 is required; the environment reads `data/2020.csv`. Step 2 is needed only
-to regenerate the planner training set. `data/schema.json` defines the panel
-model, the mechanical bounds and the reward weights.
+`data/schema.json` defines the panel model, the mechanical bounds and the reward
+weights.
 
 ### Evaluation subset
 
@@ -141,29 +135,96 @@ blocks, days 9–22 of January, April, July and October, chosen to sample all fo
 seasons. Planner training excludes those days entirely, because the oracle
 targets encode the realised future of the day they are computed on.
 
-## Reproducing the results
+## Usage
 
-Each script is resumable and writes a `*_DONE.txt` marker when it finishes.
+End to end, from a fresh clone. Timings are wall-clock on an RTX 3070 Ti Laptop
+(8 GB) with a 20-core CPU.
 
-| Result | Script | Cost |
-|---|---|---|
-| Multi-seed comparison, FSM baseline | `run_revision_seeds.py` | long (trains 2 seeds) |
-| Hindsight-optimal targets, full year | `run_oracle_fullyear.py` | ~2.5 h |
-| Wear-cost sensitivity sweep | `run_oracle_sweep.py` | ~2.5 h |
-| Dataset build + LoRA fine-tune | `run_phase2_chain.py` | ~9 h |
-| Control test (SLM planner) | `run_control_test.py` | ~2 h |
-| Planner forecast sensitivity | `run_planner_forecast_sensitivity.py`, `run_slm_forecast_sens.py` | ~4 h |
-| Instruction-conditioned training | `run_version_b.py` | ~17 h |
-| Programmability evaluation | `run_programmability.py`, `run_prog_seeds.py` | ~2 h per arm |
+### 1. Create the two environments
 
-Figures:
+See [Environments](#environments). The RL stack and the planner have
+incompatible pins, so both are needed. Point the planner interpreter at the
+second one:
 
+```bash
+export SLM_PYTHON=/path/to/envs/solar-llm/bin/python   # Windows: set SLM_PYTHON=...
 ```
+
+### 2. Get the data
+
+Download the NSRDB grid cell described in [Data](#data) from
+<https://nsrdb.nrel.gov/> — location `5771095`, 35.20 N / 126.85 E, year 2020,
+10-minute resolution — then build the files the code reads:
+
+```bash
+python finetune/prepare_nsrdb.py 5771095_35.20_126.85_2020.csv --subset
+```
+
+This writes `data/2020.csv` (full year) and `data/2020_4months_2weeks.csv`
+(the 56-day evaluation set).
+
+### 3. Build the step cache (optional, recommended)
+
+```bash
+python finetune/precompute_env_cache.py data/2020.csv --schema data/schema.json
+python finetune/precompute_env_cache.py data/2020_4months_2weeks.csv --schema data/schema.json
+```
+
+Precomputes the per-step constants and roughly halves environment runtime. Every
+script below works without it, just slower.
+
+### 4. Train
+
+**Controller.** Trains the residual-gate policy and the no-planner ablation for
+three seeds, then evaluates both against the rule-threshold planner:
+
+```bash
+python run_revision_seeds.py            # ~11 h per seed
+```
+
+Checkpoints already present under `models/` are reused instead of retrained, so
+restoring `policies/` from the Zenodo archive skips this step entirely.
+
+**Planner.** Derive hindsight-optimal targets and fine-tune the adapter:
+
+```bash
+python run_oracle_fullyear.py           # ~3.1 h   full-year oracle targets
+python run_phase2_chain.py              # ~12 h    dataset build + LoRA fine-tune
+```
+
+For the instruction-conditioned planner, `run_version_b.py` does the whole chain
+in one go (~24 h): oracle, dataset, fine-tune and evaluation.
+
+Restoring `adapters/` from the Zenodo archive skips the fine-tuning.
+
+### 5. Evaluate
+
+```bash
+python run_control_test.py                      # ~3.6 h  planner vs rule-threshold
+python run_programmability.py                   # ~1.2 h per directive
+python run_prog_seeds.py                        # ~6.8 h  the same across seeds
+python run_planner_forecast_sensitivity.py      # ~1.5 h  forecast robustness
+python run_oracle_sweep.py                      # ~2.5 h  wear-cost sweep
+```
+
+Each writes JSON into `models/` and a `*_DONE.txt` marker, and skips work that is
+already recorded, so an interrupted run can simply be restarted.
+
+### 6. Figures
+
+```bash
 python plots/capture_histories.py --with-slm
 python plots/make_paper_figures_v2.py      # figures 7 and 13
 python plots/make_paper_figures_v2b.py     # figures 8-12 and 14
 python plots/export_figures.py
 ```
+
+### Shortcut
+
+Running everything is roughly **50 GPU-hours**. The supplementary Zenodo archive
+holds the result JSONs, the fine-tuned adapters and the trained policies, so a
+reader can verify the reported tables without running anything, or re-run a
+single stage without repeating the ones before it. See the archive's `MANIFEST.md`.
 
 ## How the hindsight-optimal targets work
 
