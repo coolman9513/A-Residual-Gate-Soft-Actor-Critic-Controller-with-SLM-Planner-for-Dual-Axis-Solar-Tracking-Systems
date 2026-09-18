@@ -266,23 +266,109 @@ holds the result JSONs, the fine-tuned adapters and the trained policies, so a
 reader can verify the reported tables without running anything, or re-run a
 single stage without repeating the ones before it. See the archive's `MANIFEST.md`.
 
-## How the hindsight-optimal targets work
+## Methodology
+
+### Data processing
+
+The NSRDB export gives irradiance, weather and solar **zenith** at 10-minute
+resolution, but no solar azimuth and no look-ahead columns.
+`finetune/prepare_nsrdb.py` adds both:
+
+1. `Datetime` from the Year/Month/Day/Hour/Minute columns.
+2. `Solar Azimuth Angle` from `pvlib.solarposition.get_solarposition` at
+   35.20 N / 126.85 E, timestamps localised to `Asia/Seoul`.
+3. Look-ahead columns by shifting the realised series one step
+   (`next_10min_solar_azimuth`, `next_10min_solar_zenith`, `next_10min_DNI`,
+   `next_10min_DHI`) and three steps (`next_30min_average_DNI`), forward-filled
+   at the tail where no successor exists.
+
+These look-ahead columns are an **idealised nowcast** taken from the realised
+series rather than a forecast model.
+`run_forecast_sensitivity.py` perturbs the low-level policy's look-ahead inputs
+and `run_planner_forecast_sensitivity.py` perturbs the planner's own forecast, so
+the dependence on that idealisation is measured rather than assumed.
+
+For planner fine-tuning only, `finetune/preprocess_csv.py` additionally derives
+20–60 minute horizons with ±2 % uniform noise.
+
+### Evaluation set
+
+`data/2020_4months_2weeks.csv`: **56 days, 8,064 records** — days 9–22 of
+January, April, July and October, one block per season.
+
+The split matters because the oracle targets are hindsight-derived: they encode
+the realised future of the day they are computed on. Training the planner on an
+evaluation day would therefore leak that day's future into the model. The dataset
+builders drop every hour falling on those 56 days (1,344 hours), so the evaluation
+period is unseen. Hours outside the 07:00–18:00 tracking window are also dropped,
+since the planner is not consulted then.
+
+### Oracle targets
 
 For every planning hour, each of the three candidate regimes (`hold`, `cloud`,
-`clear`) is rolled forward in the simulator and scored as
+`clear`) is rolled forward six 10-minute steps in the real simulator with the gate
+fully open, and scored as
 
 ```
 net = harvested_energy − c_act × motor_activations
 ```
 
-with `c_act = 3.79e-4` kWh per activation, the break-even value implied by the
+`c_act = 3.79e-4` kWh per activation is the break-even value implied by the
 rule-threshold planner's own energy/wear trade-off. The highest-scoring regime
-becomes the training target for that hour. `finetune/oracle_goals.py` records the
-raw components per regime, so the optimum can be re-derived offline for any wear
-cost without re-running the oracle.
+becomes that hour's target; the winner is committed before moving to the next
+hour, so each decision sees the pose its predecessors actually produced.
+
+Stepping forward and rewinding requires an exact environment snapshot and
+restore, verified to reproduce an uninterrupted rollout to full float precision
+in energy, activations, degrees travelled and final pose.
+
+`finetune/oracle_goals.py` records the raw per-regime components, so the optimum
+for **any** wear coefficient can be re-derived offline without re-running the
+oracle — which is how the instruction-conditioned targets at three wear settings
+are produced from a single pass, on one committed trajectory, so telemetry is
+identical across directives.
 
 Hindsight is used **only** to build training labels. At inference the planner sees
-telemetry alone, and the evaluation days are held out of training.
+telemetry alone.
+
+### Planner fine-tuning
+
+Base model: **Qwen2.5-0.5B-Instruct** (`Qwen/Qwen2.5-0.5B-Instruct`), 0.5 B
+parameters, served in fp16. Not Qwen3, and not a larger variant: the size was
+chosen for edge deployability.
+
+| LoRA setting | value |
+|---|---|
+| rank `r` | 16 |
+| `lora_alpha` | 32 |
+| `lora_dropout` | 0.05 |
+| bias | none |
+| target modules | `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj` |
+| trainable parameters | 8.8 M of 502.8 M (1.75 %) |
+
+| training | oracle-supervised | instruction-conditioned |
+|---|---|---|
+| epochs | 4 | 2 |
+| max sequence length | 1152 | 1216 |
+| learning rate | 2e-4 | 2e-4 |
+| optimiser | AdamW, weight decay 0 | AdamW, weight decay 0 |
+| schedule | cosine, 5 % warmup | cosine, 5 % warmup |
+| batch size x grad accumulation | 2 x 8 | 2 x 8 |
+| train / val samples | 4,697 / 339 | 10,160 / 1,017 |
+| oversampling | `clear` x10, `cloud` x3 | `clear` x3 |
+| final training loss | 0.031 | 0.0098 |
+
+The validation split is 10 %, taken **per planning hour before oversampling**, so
+duplicated copies of an hour cannot straddle the split.
+
+Sequence length is not a free parameter: the prompt plus reply runs to about 975
+tokens, and the loss is masked to the assistant turn only. At the old 768-token
+default every sample was truncated before its answer, leaving nothing supervised;
+`finetune/train.py` now raises rather than training on such a batch.
+
+Only `motion_budget_deg` and `hold` reach the controller, through the regime
+router. The pose fields in the planner's output are observation context; the
+residual always aims at the physics-derived ideal orientation.
 
 ## Code Information
 
