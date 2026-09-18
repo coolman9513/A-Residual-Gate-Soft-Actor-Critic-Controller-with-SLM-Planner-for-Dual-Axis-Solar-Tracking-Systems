@@ -183,20 +183,93 @@ cost without re-running the oracle.
 Hindsight is used **only** to build training labels. At inference the planner sees
 telemetry alone, and the evaluation days are held out of training.
 
-## Layout
+## Code Information
 
-```
-environment.py, tracker.py, reward.py   simulation and PV model
-train_utils.py                          residual-gate wrapper, training loop
-eval_utils.py                           rollouts and metrics
-meta_sac/                               SAC-Auto agent and config
-llm/                                    planner: prompts, guardrails, routing
-  goal_guidance.py                        guardrail modes, prompt versions
-finetune/                               data prep, target generation, fine-tuning
-  prepare_nsrdb.py                        raw NSRDB -> the CSV the env reads
-  oracle_goals.py                         hindsight-optimal regime search
-plots/                                  figure generation
-```
+All code sits at the repository root; there is no package directory to `cd` into.
+Scripts are run from the root, for example `python run_control_test.py`.
+
+### Simulation environment
+
+| file | contents |
+|---|---|
+| `environment.py` | `SolarTrackerEnv`, a CityLearn-style environment for one dual-axis tracker: observations, stepping, the PV power model and the tracking-window logic |
+| `tracker.py` | solar geometry and irradiance: incidence cosine, plane-of-array irradiance from DNI plus isotropic DHI, and the panel power/energy conversion |
+| `reward.py` | `SolarTrackerReward`: energy, peak-weighted tracking efficiency, and the linear, quadratic and smoothness movement penalties |
+| `schema.py` | loads and normalises `data/schema.json` into the environment configuration |
+| `data.py` | dataset helpers that resolve and read the CSV assets under `data/` |
+| `metrics.py` | tabular evaluation metrics in CityLearn's format |
+| `utilities.py` | JSON I/O, project/model path resolution and schema refresh helpers |
+
+### Controllers
+
+| file | contents |
+|---|---|
+| `agents.py` | baseline controllers: the fixed panel and the rule-based tracker |
+| `rbc.py` | the astronomical rule-based schedule that forms the residual-gate base, plus `SolarTrackerRBCEditor` for inspecting it interactively |
+| `train_utils.py` | `ResidualTrackerWrapper` (base action, gate, authority limits, safety layer), the environment factory and the SAC training loop |
+| `eval_utils.py` | rollouts for every controller and the energy, movement, activation and reversal metrics |
+| `checkpointing.py` | saving and restoring agent state, config, schema and training history |
+| `meta_sac/` | the SAC-Auto agent: `meta_sac/sacauto.py` (automatic entropy tuning), `meta_sac/modelmeta.py` (networks), `meta_sac/replay_memory.py` (uniform and KL replay buffers), `meta_sac/sacmeta.py`, `meta_sac/utils.py` |
+
+### Planner
+
+| file | contents |
+|---|---|
+| `llm/goal_guidance.py` | `LLMGoalGuidance`: hourly planning calls, `guardrail_mode` (`full`/`partial`/`loose`), `prompt_version`, the operator directive, caching and the rule fallback |
+| `llm/goal_prompts.py` | prompt builders. v1 carries the DNI-threshold decision ladder; v2 is ladder-free and takes an operator directive. `WEAR_DIRECTIVES` holds the directives used for both training and evaluation |
+| `llm/goal_wrapper.py` | telemetry construction and the goal-conditioned observation channels |
+| `llm/regime_router.py` | `route_goal` and the authority table mapping a regime to per-step limits and an hourly budget |
+| `llm/parser.py` | JSON extraction and validation of planner responses |
+| `llm/local_client.py` | serves the fine-tuned adapter through a subprocess; interpreter from `SLM_PYTHON` |
+| `llm/client.py` | optional OpenAI-compatible client for an LM Studio endpoint |
+
+### Data preparation and fine-tuning
+
+| file | contents |
+|---|---|
+| `finetune/prepare_nsrdb.py` | raw NSRDB export to `data/2020.csv`, plus the 56-day evaluation subset |
+| `finetune/preprocess_csv.py` | adds noisy 20-60 minute horizons for planner training (`data/2020_enriched.csv`) |
+| `finetune/precompute_env_cache.py` | precomputes per-step constants into an `.npz` cache |
+| `finetune/oracle_goals.py` | the hindsight-optimal regime search, including the exact environment snapshot and restore |
+| `finetune/generate_dataset.py` | rule-threshold targets (the original planner) |
+| `finetune/generate_oracle_dataset.py` | oracle targets, evaluation days held out |
+| `finetune/generate_instruction_dataset.py` | instruction-conditioned targets: identical telemetry, three directives, three answers |
+| `finetune/train.py` | LoRA fine-tuning loop |
+| `finetune/serve_inference.py` | stdin/stdout inference server; adapter from `SOLAR_SLM_ADAPTER` |
+| `finetune/eval_slm_regime.py` | planner regime accuracy on the held-out split |
+| `finetune/evaluate.py` | adapter diagnostics: parse rate, accuracy, inference speed |
+
+### Experiment scripts
+
+| file | produces |
+|---|---|
+| `run_revision_seeds.py` | multi-seed comparison and the rule-threshold baseline |
+| `run_oracle_fullyear.py` | full-year oracle targets |
+| `run_oracle_sweep.py` | wear-cost sensitivity sweep |
+| `run_phase2_chain.py` | dataset build and LoRA fine-tune, chained |
+| `run_version_b.py` | instruction-conditioned training, end to end |
+| `run_control_test.py` | oracle-supervised planner versus the rule-threshold planner |
+| `run_programmability.py` | directive-switching evaluation, one seed |
+| `run_prog_seeds.py` | the same across seeds |
+| `run_forecast_sensitivity.py` | noise in the low-level policy's look-ahead inputs |
+| `run_planner_forecast_sensitivity.py` | noise in the planner's own forecast |
+| `run_slm_forecast_sens.py` | the same for the fine-tuned planner |
+
+### Figures
+
+`plots/capture_histories.py` records rollout histories;
+`plots/make_paper_figures_v2.py` and `plots/make_paper_figures_v2b.py` draw the
+figures; `plots/export_figures.py` writes them out.
+
+### Configuration
+
+| file | contents |
+|---|---|
+| `data/schema.json` | panel model, mechanical bounds, observation set, reward weights, baselines |
+| `meta_sac/configs/solar_tracker.yml` | SAC hyperparameters |
+| `requirements.txt`, `requirements-llm.txt` | the two environments |
+| `setup.py` | optional editable install; reads `requirements.txt` |
+| `llm/__init__.py` | re-exports the planner classes |
 
 ## Notes
 
