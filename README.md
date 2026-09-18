@@ -524,6 +524,50 @@ figures; `plots/export_figures.py` writes them out.
 | `setup.py` | optional editable install; reads `requirements.txt` |
 | `llm/__init__.py` | re-exports the planner classes |
 
+## License
+
+This code is released under the **MIT License**; see [`LICENSE`](LICENSE).
+
+Three licences apply to different parts of a working setup, so they are listed
+together:
+
+| component | licence | note |
+|---|---|---|
+| this repository | MIT | code, scripts and documentation |
+| `Qwen/Qwen2.5-0.5B-Instruct` | Apache-2.0 | downloaded at runtime, not redistributed here; the LoRA adapters are derivative works of it |
+| NREL/NSRDB data | CC BY | not redistributed here; credit DOE/NREL/ALLIANCE, see [Citation](#citation) |
+
+## Contributing
+
+This is research code accompanying a paper, so the priority is that the published
+numbers stay reproducible rather than that the code keeps growing.
+
+**Reporting a problem.** Open an issue and include:
+
+- which environment you used, `solar-rl` or `solar-llm`, and its Python and
+  PyTorch versions
+- the exact command you ran
+- the relevant part of the `*.log` file the script writes
+- for a reproduction mismatch, the JSON the script wrote into `models/` next to
+  the figure or table you expected
+
+**Pull requests.** Fixes, portability improvements and documentation are welcome.
+Two things to keep in mind:
+
+- Results in the paper correspond to the tagged release. A change that alters a
+  reported number is not a bug fix; please open an issue first so the difference
+  can be understood before it is merged.
+- The defaults in `llm/goal_guidance.py` (`guardrail_mode="full"`,
+  `prompt_version=1`) reproduce the earlier published behaviour and should stay
+  as they are; new behaviour belongs behind a new option.
+
+Before submitting, check that the scripts you touched still import and start:
+
+```bash
+python -m compileall -q .
+python run_programmability.py --help
+```
+
 ## Notes
 
 `llm/goal_guidance.py` exposes `guardrail_mode` (`full` / `partial` / `loose`) and
