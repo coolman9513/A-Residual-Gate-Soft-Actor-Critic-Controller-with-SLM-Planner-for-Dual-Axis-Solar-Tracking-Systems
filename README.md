@@ -61,19 +61,85 @@ If it is unset, the current interpreter is used when it can import
 
 ## Data
 
-Irradiance data is NREL NSRDB for Gwangju, South Korea, and is **not
-redistributed here**. Download it from <https://nsrdb.nrel.gov/> and place the CSV
-in `data/`. `data/schema.json` defines the panel, the bounds and the reward
-weights. `finetune/preprocess_csv.py` adds the look-ahead columns and
-`finetune/precompute_env_cache.py` builds the step cache:
+### Source
 
-```
+Irradiance and meteorological data come from the **NREL National Solar Radiation
+Database (NSRDB)**, Physical Solar Model v3. The files are **not redistributed
+here**; download them from <https://nsrdb.nrel.gov/> and place them in `data/`.
+
+| field | value |
+|---|---|
+| Database | NSRDB, Physical Solar Model (PSM) v3 |
+| NSRDB version string | `3.1.1` (as recorded in the file header) |
+| Location ID | `5771095` |
+| Latitude, longitude | 35.20° N, 126.85° E |
+| Elevation | 25 m |
+| Region | Jeollanam-do, South Korea (grid cell adjacent to Gwangju) |
+| Time zone | UTC+9 |
+| Year | 2020 |
+| Temporal resolution | 10 minutes |
+| Records | 52,560 (full year) |
+
+The raw download is named `5771095_35.20_126.85_2020.csv` and carries the two
+NSRDB metadata header rows above the column header.
+
+NSRDB is published under a Creative Commons Attribution licence; credit
+DOE/NREL/ALLIANCE when reusing it. Cite the database as:
+
+> Sengupta, M., Xie, Y., Lopez, A., Habte, A., Maclaurin, G., Shelby, J. (2018).
+> The National Solar Radiation Data Base (NSRDB). *Renewable and Sustainable
+> Energy Reviews*, 89, 51–60. https://doi.org/10.1016/j.rser.2018.03.003
+
+### Columns
+
+Taken directly from the NSRDB download:
+
+`Year`, `Month`, `Day`, `Hour`, `Minute`, `Temperature`, `Dew Point`, `DHI`,
+`DNI`, `GHI`, `Surface Albedo`, `Pressure`, `Wind Direction`, `Wind Speed`,
+`Relative Humidity`, `Solar Zenith Angle`, `Cloud Type`, `Fill Flag`, `Ozone`,
+`Clearsky GHI`, `Clearsky DNI`, `Clearsky DHI`
+
+Added by `finetune/prepare_nsrdb.py`:
+
+| column | meaning |
+|---|---|
+| `Solar Azimuth Angle` | computed from the timestamp and site coordinates; NSRDB supplies zenith but not azimuth |
+| `Datetime` | parsed timestamp |
+| `next_10min_solar_azimuth`, `next_10min_solar_zenith` | deterministic solar geometry one step ahead |
+| `next_10min_DNI`, `next_10min_DHI` | look-ahead irradiance, one step |
+| `next_30min_average_DNI` | mean DNI over the next three steps |
+
+The look-ahead irradiance columns are an idealised nowcast taken from the
+realised series; `run_forecast_sensitivity.py` and
+`run_planner_forecast_sensitivity.py` quantify how much the results depend on
+them.
+
+### Preparation
+
+Three steps, in order:
+
+```bash
+# 1. raw NSRDB download -> data/2020.csv and the 56-day evaluation subset
+python finetune/prepare_nsrdb.py 5771095_35.20_126.85_2020.csv --subset
+
+# 2. optional, planner fine-tuning only: adds noisy 20-60 min horizons
+#    -> data/2020_enriched.csv
+python finetune/preprocess_csv.py
+
+# 3. optional: precompute per-step constants, roughly halves env runtime
 python finetune/precompute_env_cache.py data/2020.csv --schema data/schema.json
 ```
 
-The evaluation set is 56 days (four two-week blocks: January, April, July,
-October). Training of the planner excludes those days entirely, because the
-oracle targets encode the realised future of the day they are computed on.
+Step 1 is required; the environment reads `data/2020.csv`. Step 2 is needed only
+to regenerate the planner training set. `data/schema.json` defines the panel
+model, the mechanical bounds and the reward weights.
+
+### Evaluation subset
+
+`data/2020_4months_2weeks.csv` holds **56 days / 8,064 records**: four two-week
+blocks, days 9–22 of January, April, July and October, chosen to sample all four
+seasons. Planner training excludes those days entirely, because the oracle
+targets encode the realised future of the day they are computed on.
 
 ## Reproducing the results
 
@@ -126,7 +192,8 @@ eval_utils.py                           rollouts and metrics
 meta_sac/                               SAC-Auto agent and config
 llm/                                    planner: prompts, guardrails, routing
   goal_guidance.py                        guardrail modes, prompt versions
-finetune/                               target generation and LoRA fine-tuning
+finetune/                               data prep, target generation, fine-tuning
+  prepare_nsrdb.py                        raw NSRDB -> the CSV the env reads
   oracle_goals.py                         hindsight-optimal regime search
 plots/                                  figure generation
 ```
