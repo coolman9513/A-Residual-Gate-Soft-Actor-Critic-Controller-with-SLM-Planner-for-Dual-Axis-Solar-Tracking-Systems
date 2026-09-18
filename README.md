@@ -15,6 +15,46 @@ bound: the learned policy can add energy but never fall below the baseline.
 An hourly planner classifies the weather regime and sets hard constraints
 (per-hour authority limits, a deadband, and the base-pose mode). The planner is a small language model fine-tuned with LoRA.
 
+## Requirements
+
+### Hardware
+
+Measured on the machine the reported results were produced on: Intel i7-12700H
+(20 logical cores), 48 GB RAM, NVIDIA RTX 3070 Ti Laptop (8 GB VRAM), Windows 11.
+
+| stage | VRAM | notes |
+|---|---|---|
+| LoRA fine-tuning | **8 GB** | peaks at 7.98 GB with batch size 2 at 1216 tokens; a smaller card needs a shorter sequence, a smaller batch, or 4-bit quantisation |
+| Planner inference | ~2 GB | one 0.5B model in fp16 |
+| SAC training and evaluation | <1 GB | the policy is a 2x512 MLP |
+
+RAM is modest: the full-year environment peaks around 280 MB, and the simulation
+is single-threaded, so more cores only help when running experiments in parallel.
+A GPU is required for fine-tuning and makes planner evaluation practical;
+everything else runs on CPU, slower.
+
+Disk: about 30 MB for the NSRDB download and its derived CSVs, and about 400 MB
+for the checkpoints, adapters and fine-tuning datasets a full run produces.
+
+### Software
+
+Two environments, because the RL stack and the language model have mutually
+incompatible pins. Exact versions are pinned in the two files; the table lists the
+ones that matter.
+
+| | RL / simulation | language model / planner |
+|---|---|---|
+| file | [`requirements.txt`](requirements.txt) | [`requirements-llm.txt`](requirements-llm.txt) |
+| Python | 3.7 | 3.10 |
+| PyTorch | 1.13.1 + CUDA 11.7 | 2.5.1 + CUDA 12.1 |
+| key packages | CityLearn 2.1.2, gym 0.26.2, gymnasium 0.28.1, numpy 1.21.6, pandas 1.3.5, scikit-learn 1.0.2, pvlib 0.10.4 | transformers 5.9.0, peft 0.19.1, accelerate 1.13.0, tokenizers 0.22.2, numpy 1.26.4 |
+| used by | environment, controller, all `run_*.py` | `finetune/train.py`, `finetune/serve_inference.py` |
+
+`llm/client.py` can also talk to an LM Studio endpoint; the `openai` packages for
+that are listed, commented out, at the end of `requirements.txt`.
+
+Installation commands are in [Environments](#environments).
+
 ## Environments
 
 Two conda environments are needed. The RL stack (Python 3.7, torch 1.13 + CUDA
@@ -45,7 +85,7 @@ source file:
 
 ```bash
 # Windows
-set SLM_PYTHON=C:\path	o\envs\solar-llm\python.exe
+set SLM_PYTHON=C:\path\to\envs\solar-llm\python.exe
 # Linux / macOS
 export SLM_PYTHON=~/miniconda3/envs/solar-llm/bin/python
 ```
