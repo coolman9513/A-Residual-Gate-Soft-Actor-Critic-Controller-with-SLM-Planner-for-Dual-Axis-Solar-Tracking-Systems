@@ -10,7 +10,7 @@ solar-geometry look-ahead are left unchanged, so only the controller's forecast
 inputs are corrupted. Fixed/RBC are forecast-independent and evaluated once.
 
 Detached run:
-    C:\\Users\\alli13\\AppData\\Local\\anaconda3\\envs\\stracker\\python.exe run_forecast_sensitivity.py
+    python run_forecast_sensitivity.py
 Monitor: Get-Content forecast_sens.log -Wait   Done: forecast_sens_DONE.txt
 """
 from __future__ import annotations

@@ -11,8 +11,10 @@ is negligible across 100 training episodes.
 
 from __future__ import annotations
 
+import importlib.util
 import io
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -22,17 +24,42 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _SERVE_SCRIPT = _PROJECT_ROOT / "finetune" / "serve_inference.py"
 
 # Path to the Python interpreter that has peft + transformers installed.
-# Resolved automatically; override by passing python_exe to __init__.
+# Taken from the SLM_PYTHON environment variable; override by passing
+# python_exe to __init__.
+SLM_PYTHON_ENV = "SLM_PYTHON"
+
+
 def _find_sllm_python() -> str:
-    candidates = [
-        Path("C:/Users/mrcoo/anaconda3/envs/sllm_finetune/python.exe"),
-        Path(r"C:\Users\alli13\AppData\Local\anaconda3\envs\sllm_finetune\python.exe"),
-        Path(r"C:\Users\alli13\AppData\Local\anaconda3\envs\stracker\python.exe"),
-    ]
-    for p in candidates:
-        if p.exists():
-            return str(p)
-    return sys.executable
+    """Locate the Python 3.10 interpreter that has transformers and peft.
+
+    Resolution order:
+      1. the SLM_PYTHON environment variable
+      2. sys.executable, if the current interpreter already has transformers
+
+    The planner runs in a different environment from the RL stack (see
+    requirements-llm.txt), so in normal use SLM_PYTHON must be set, e.g.
+
+        Windows   set SLM_PYTHON=C:\path\to\envs\solar-llm\python.exe
+        Linux/mac export SLM_PYTHON=~/miniconda3/envs/solar-llm/bin/python
+    """
+    env = os.environ.get(SLM_PYTHON_ENV, "").strip()
+    if env:
+        if not Path(env).exists():
+            raise FileNotFoundError(
+                "%s points to %r, which does not exist." % (SLM_PYTHON_ENV, env)
+            )
+        return env
+
+    # Only usable if this very interpreter can import transformers.
+    if importlib.util.find_spec("transformers") is not None:
+        return sys.executable
+
+    raise RuntimeError(
+        "Cannot locate the language-model interpreter. Set the %s environment "
+        "variable to the Python 3.10 executable that has transformers and peft "
+        "installed (see requirements-llm.txt), or pass python_exe=... to "
+        "LocalQwenClient." % SLM_PYTHON_ENV
+    )
 
 
 class LocalQwenClient:

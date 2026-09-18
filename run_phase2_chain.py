@@ -15,7 +15,7 @@ The existing paper adapter in finetune/output/ is NOT touched - the new adapter
 goes to finetune/output_oracle/.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_phase2_chain.py
+    python run_phase2_chain.py
 Monitor:  Get-Content phase2_chain.log -Wait     Done: phase2_chain_DONE.txt
 """
 from __future__ import annotations
@@ -28,8 +28,13 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PY_RL = r"C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe"
-PY_FT = r"C:/Users/mrcoo/anaconda3/envs/sllm_finetune/python.exe"
+# Interpreters for the two environments. The RL stack and the language model have
+# incompatible dependencies (see requirements.txt / requirements-llm.txt), so each
+# stage is dispatched to its own interpreter. RL_PYTHON defaults to the
+# interpreter running this script; SLM_PYTHON must point at the Python 3.10
+# environment that has transformers and peft.
+PY_RL = os.environ.get("RL_PYTHON") or sys.executable
+PY_FT = os.environ.get("SLM_PYTHON") or sys.executable
 
 ORACLE_DONE = ROOT / "oracle_fullyear_DONE.txt"
 ORACLE_JSON = ROOT / "models" / "oracle_regimes_2020full.json"

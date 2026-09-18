@@ -40,7 +40,7 @@ instruction entirely. A null result here is informative - it would mean
 instruction-conditioned training (Version B) is required.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_programmability.py
+    python run_programmability.py
 Monitor:  Get-Content programmability.log -Wait   Done: programmability_DONE.txt
 """
 from __future__ import annotations

@@ -40,8 +40,24 @@ In both cases install `torch` first so pip resolves the CUDA build rather than
 the CPU one.
 
 `llm/local_client.py` starts `finetune/serve_inference.py` in the second
-environment; edit the interpreter path at the top of that file for your machine.
-Set `SOLAR_SLM_ADAPTER` to choose which fine-tuned adapter is served.
+environment. Point it there with an environment variable rather than editing any
+source file:
+
+```bash
+# Windows
+set SLM_PYTHON=C:\path	o\envs\solar-llm\python.exe
+# Linux / macOS
+export SLM_PYTHON=~/miniconda3/envs/solar-llm/bin/python
+```
+
+If it is unset, the current interpreter is used when it can import
+`transformers`; otherwise the client raises an error naming the variable.
+
+| variable | purpose |
+|---|---|
+| `SLM_PYTHON` | Python 3.10 interpreter with transformers and peft |
+| `RL_PYTHON` | Python 3.7 RL interpreter (chain scripts only; defaults to the running one) |
+| `SOLAR_SLM_ADAPTER` | which fine-tuned adapter `serve_inference.py` loads |
 
 ## Data
 

@@ -26,7 +26,7 @@ Noise is multiplicative Gaussian at 0/5/10/20% relative RMSE, matching the
 definition already used in the paper.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_planner_forecast_sensitivity.py
+    python run_planner_forecast_sensitivity.py
 Monitor:  Get-Content planner_fc_sens.log -Wait   Done: planner_fc_sens_DONE.txt
 """
 from __future__ import annotations

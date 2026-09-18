@@ -19,7 +19,7 @@ levels are about four and a half hours. Resumable - tags already in the JSON are
 skipped.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_slm_forecast_sens.py
+    python run_slm_forecast_sens.py
 Monitor:  Get-Content slm_fc_sens.log -Wait   Done: slm_fc_sens_DONE.txt
 """
 from __future__ import annotations

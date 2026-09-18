@@ -17,7 +17,7 @@ Results (per seed + mean/std) -> models/revision_seeds_results.json.
 Resumable: seeds already present in the JSON are skipped.
 
 Detached run:
-    C:\\Users\\alli13\\AppData\\Local\\anaconda3\\envs\\stracker\\python.exe run_revision_seeds.py
+    python run_revision_seeds.py
 Monitor: Get-Content revision_seeds.log -Wait     Done: revision_seeds_DONE.txt
 """
 from __future__ import annotations

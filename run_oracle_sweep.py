@@ -14,7 +14,7 @@ Every run uses the identical harness and a fully open gate (g=1), so the FSM
 baseline below is directly comparable.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_oracle_sweep.py
+    python run_oracle_sweep.py
 Monitor:  Get-Content oracle_sweep.log -Wait      Done marker: oracle_sweep_DONE.txt
 """
 from __future__ import annotations

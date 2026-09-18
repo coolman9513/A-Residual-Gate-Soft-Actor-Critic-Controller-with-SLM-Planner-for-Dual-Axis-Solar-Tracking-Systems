@@ -22,7 +22,7 @@ Guardrail modes evaluated (handoff §11 phase 3):
     loose   - all three removed; the SLM's decisions stand
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_control_test.py
+    python run_control_test.py
 Monitor:  Get-Content control_test.log -Wait    Done: control_test_DONE.txt
 """
 from __future__ import annotations

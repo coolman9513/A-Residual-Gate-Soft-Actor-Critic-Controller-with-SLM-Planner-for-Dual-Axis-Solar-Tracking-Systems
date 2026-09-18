@@ -22,7 +22,7 @@ gate policies - not whether a differently-seeded adapter would behave the same.
 Retraining the adapter per seed would cost ~14.6 h each and is out of scope here.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_prog_seeds.py
+    python run_prog_seeds.py
 Monitor:  Get-Content prog_seeds.log -Wait   Done: prog_seeds_DONE.txt
 """
 from __future__ import annotations
@@ -36,7 +36,13 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PY_RL = r"C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe"
+# Interpreters for the two environments. The RL stack and the language model have
+# incompatible dependencies (see requirements.txt / requirements-llm.txt), so each
+# stage is dispatched to its own interpreter. RL_PYTHON defaults to the
+# interpreter running this script; SLM_PYTHON must point at the Python 3.10
+# environment that has transformers and peft.
+PY_RL = os.environ.get("RL_PYTHON") or sys.executable
+PY_FT = os.environ.get("SLM_PYTHON") or sys.executable
 ADAPTER = ROOT / "finetune" / "output_instruct" / "adapter"
 ARMS = "neutral,max_energy,min_movement"
 

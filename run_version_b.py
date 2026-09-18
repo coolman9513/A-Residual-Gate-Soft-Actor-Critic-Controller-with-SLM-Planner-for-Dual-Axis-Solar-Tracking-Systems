@@ -39,7 +39,7 @@ Stages (resumable; each skipped if its output exists):
     4. programmability evaluation                     ~4.3 h
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_version_b.py
+    python run_version_b.py
 Monitor:  Get-Content version_b.log -Wait     Done: version_b_DONE.txt
 """
 from __future__ import annotations
@@ -55,8 +55,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "finetune"))
 
-PY_RL = r"C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe"
-PY_FT = r"C:/Users/mrcoo/anaconda3/envs/sllm_finetune/python.exe"
+# Interpreters for the two environments. The RL stack and the language model have
+# incompatible dependencies (see requirements.txt / requirements-llm.txt), so each
+# stage is dispatched to its own interpreter. RL_PYTHON defaults to the
+# interpreter running this script; SLM_PYTHON must point at the Python 3.10
+# environment that has transformers and peft.
+PY_RL = os.environ.get("RL_PYTHON") or sys.executable
+PY_FT = os.environ.get("SLM_PYTHON") or sys.executable
 
 ORACLE_JSON = ROOT / "models" / "oracle_regimes_2020full_components.json"
 ORACLE_TAG = "fullyear_components"

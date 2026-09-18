@@ -23,7 +23,7 @@ Writes to models/oracle_regimes_2020full.json - a DIFFERENT file from the
 56-day sweep, so the two can run concurrently without clobbering each other.
 
 Detached run:
-    C:/Users/mrcoo/anaconda3/envs/sllm_rl/python.exe run_oracle_fullyear.py
+    python run_oracle_fullyear.py
 Monitor:  Get-Content oracle_fullyear.log -Wait   Done: oracle_fullyear_DONE.txt
 """
 from __future__ import annotations
